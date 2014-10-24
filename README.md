@@ -1,4 +1,4 @@
-[>84;0;0cgro-tent
+gro-tent
 ========
 Mushroom Grow tent monitoring for fun and profit!
 
