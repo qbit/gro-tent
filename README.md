@@ -1,4 +1,4 @@
-gro-tent
+[>84;0;0cgro-tent
 ========
 Mushroom Grow tent monitoring for fun and profit!
 
@@ -6,8 +6,8 @@ Mushroom Grow tent monitoring for fun and profit!
 * Temperature monitoring
 * Humidity monitoring
 * Dew point monitoring
+* Lux monitoring
 * Graphing of the data
 
 # Planned features
-* Luminosity tracking
 * PID control of humidity.
