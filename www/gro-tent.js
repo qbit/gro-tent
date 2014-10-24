@@ -52,6 +52,7 @@ google.setOnLoadCallback(function() {
 	]);
 	makeChart('Humidity', results, 'humid', [
 	    {type: 'datetime', name: 'Time', value: 'timestamp'},
+	    {type: 'number', name: 'Dew point', value: 'dew_p'},
 	    {type: 'number', name: 'Humidity', value: 'humidity'}
 	]);
 
