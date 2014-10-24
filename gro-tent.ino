@@ -1,4 +1,7 @@
 // This #include statement was automatically added by the Spark IDE.
+#include "Adafruit_TSL2561_U/Adafruit_TSL2561_U.h"
+
+// This #include statement was automatically added by the Spark IDE.
 #include "HttpClient/HttpClient.h"
 
 // This #include statement was automatically added by the Spark IDE.
@@ -27,16 +30,50 @@ http_response_t response;
 
 DHT dht(DHTPIN, DHTTYPE);
 
+Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
+
+void displaySensorDetails(void)
+{
+  sensor_t sensor;
+  tsl.getSensor(&sensor);
+  Serial.println("------------------------------------");
+  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
+  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
+  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
+  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" lux");
+  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" lux");
+  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" lux");  
+  Serial.println("------------------------------------");
+  Serial.println("");
+  delay(500);
+}
+
 void setup() {
      Serial.begin(9600); // requried for the http lib
-     delay(1000); // per the doc, delay before we do anything with the sensor
-     dht.begin();
+     delay(1000); // per the doc, delay before we do anything with the DHT sensor 
+     
+     if (debug) {
+         displaySensorDetails();
+	 }
+	 
+    if (!tsl.begin()) {
+        Serial.println("Can't talk to lux sensor");
+        while(1);
+    } 
+
+    tsl.enableAutoRange(true);
+    tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
+    
+    dht.begin();
 }
 
 void loop() {
 // Wait a few seconds between measurements.
-   delay(DELAY);
-
+   if (!debug) {
+       delay(DELAY);
+   } else {
+       delay(5000);
+   }
 // Reading temperature or humidity takes about 250 milliseconds!
 // Sensor readings may also be up to 2 seconds 'old' (its a 
 // very slow sensor)
@@ -48,10 +85,20 @@ void loop() {
    
    int tm = Time.now();
    
+   float l = 0;
+   
+   sensors_event_t event;
+   
+   tsl.getEvent(&event);
+   
+   if (event.light) {
+       l = event.light;
+   }
+       
 // Check if any reads failed and exit early (to try again).
    if (isnan(h) || isnan(t) || isnan(f)) {
       if (debug) {
-   	     Serial.println("Failed to read from DHT sensor!");
+         Serial.println("Failed to read from DHT sensor!");
       }
       return;
    }
@@ -76,27 +123,33 @@ void loop() {
     request.path += "temp_f=" + String(f) + "&";
     request.path += "temp_c=" + String(t) + "&";
     request.path += "temp_k=" + String(k) + "&";
+    request.path += "lux=" + String(l) + "&";
     request.path += "time=" + String(tm);
     
-    http.get(request, response, headers);
-
-    if (debug) {
-       Serial.print("Humid: "); 
-       Serial.print(h);
-       Serial.print("% - ");
-       Serial.print("Temp: "); 
-       Serial.print(t);
-       Serial.print("*C ");
-       Serial.print(f);
-       Serial.print("*F ");
-       Serial.print(k);
-       Serial.print("*K - ");
-       Serial.print("DewP: ");
-       Serial.print(dp);
-       Serial.print("*C - ");
-       Serial.print("HeatI: ");
-       Serial.print(hi);
-       Serial.println("*C");
-       Serial.println(tm);
+    if (!debug) {
+        http.get(request, response, headers);
+    } else {
+        Serial.println(request.path);
+    	Serial.print("Humid: "); 
+    	Serial.print(h);
+    	Serial.print("% - ");
+    	Serial.print("Temp: "); 
+    	Serial.print(t);
+    	Serial.print("*C ");
+    	Serial.print(f);
+    	Serial.print("*F ");
+    	Serial.print(k);
+    	Serial.print("*K - ");
+    	Serial.print("DewP: ");
+    	Serial.print(dp);
+    	Serial.print("*C - ");
+    	Serial.print("HeatI: ");
+    	Serial.print(hi);
+    	Serial.print("*C");
+    	Serial.print(" - Lux: ");
+    	Serial.print(l);
+        Serial.print(" - time: ");
+    	Serial.print(tm);
+    	Serial.println("");
     }
 }

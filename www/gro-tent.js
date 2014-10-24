@@ -13,6 +13,7 @@ google.setOnLoadCallback(function() {
 	data.addColumn('number', 'Humidity');
 	data.addColumn('number', 'Temp (c)');
 	data.addColumn('number', 'Temp (f)');
+	data.addColumn('number', 'Lux');
 	data.addColumn('number', 'Dew Point');
 
 	$.each(results, function (i, row) {
@@ -21,6 +22,7 @@ google.setOnLoadCallback(function() {
 		parseFloat(row.humidity),
 		parseFloat(row.temp_c),
 		parseFloat(row.temp_f),
+		parseFloat(row.lux),
 		parseFloat(row.dew_p)
 	    ]);
 	});
