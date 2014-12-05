@@ -1,7 +1,7 @@
 var http = require('http'),
 pg = require('pg'),
 url = require('url'),
-cstr = "postgres://%u@%h/%d",
+cstr = "postgres://%u@%h:5433/%d",
 server;
 
 cstr = cstr.replace("%u", process.env['PGUSER'] || process.env['USER']);
@@ -37,19 +37,18 @@ function dataToQs(obj) {
 
 function saveData(data, res, fn) {
     data = dataToQs(data);
-    console.log(data);
-
 
     pg.connect(cstr, function(err, client, done) {
-	function errors(err) {
-	    if (!err) {
+	function errors(e) {
+	    if (!e) {
 		return false;
 	    }
 
 	    done(client);
 
+	    console.log(e);
 	    res.writeHead(500, {'Content-Type': 'text/plain'});
-	    res.end(err.code);
+	    res.end(e.code);
 	    return true;
 	}
 
@@ -65,23 +64,32 @@ function saveData(data, res, fn) {
 		fn = null;
 	    }
 
-	    console.log(result.rows[0].number);
-	    fn.call(null, {str: "saved"});
-	    fn = null;
+	    res.writeHead(200, {'Content-Type': 'http/plain'});
+	    res.end();
+	    if (fn) {
+		fn.call(null, result);
+		fn = null;
+	    }
 	});
+    });
+}
+
+function getData(obj) {
+    pg.connect(cstr, function(err, client, done) {
     });
 }
 
 server = http.createServer(function(req, res) {
     var params = url.parse(req.url, true);
-
-    if (params.path.match(/^\/data/)) {
-	saveData(params.query, res, function(status) {
-	});
+    console.log(req.url);
+    if (params.path.match(/^\/output/)) {
+	getData(params.query, res);
+    } else if (params.path.match(/^\/data/)) {
+	saveData(params.query, res);
     } else {
 	res.statusCode = 404;
 	res.end();
     }
 });
 
-server.listen(process.env['PORT']);
+server.listen(process.env['PORT'] || 3000);
